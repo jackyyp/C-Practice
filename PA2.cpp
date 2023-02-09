@@ -26,6 +26,36 @@ void printPigLatin(const char str[]);
 // You codes start here. Please do not modify codes above
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//helper function
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+//return index of first char of targeted char
+int checkExist(const char str[],const char target[]){
+    for(int i =0;i<countCharacters(str);i++){
+        if(str[i]!=target[0]){
+            continue;
+        }
+
+        int check = 0;
+        for(int j=0;j<countCharacters(target);j++){
+            if(str[j+i]==target[j]){
+                check++;
+            }
+        }
+
+        if(check==countCharacters(target)){
+            return i;
+        }
+    }
+
+    return -1; //not found
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 //tested ,(including space char)
 int countCharacters(const char str[])
 {
@@ -57,58 +87,80 @@ int countWords(const char str[])
     //* how about empty string ' ' ? --> *FIX (not returning 1)
 }
 
+//to be done
 void swapString(char str[], const char target[], const char to[])
 {
-    int newCount = 0;
 
-    newCount = countCharacters(str)-countCharacters(target)+countCharacters(to);
-    char newSentence[newCount+1]; //null char , to store the new sentence
+    //Description - Replaces every instance of the characters in target in str with the characters in to.
+    char newStr[MAX_STRLEN];
 
-    int targetStartIndex=0,targetEndIndex=0; // **TBC
-    int word_index[countWords(str)]; //storing the starting index of each word
+    int idx = checkExist(str,target);
 
-    int count=0;
-    for(int i=0;i<countCharacters(str);i++){
-        if(str[i]==' '){
-            word_index[count] = i+1; //idx
-            count++;
-        }
-    }
-    //
+    int strLength = countCharacters(str);
+    int targetLength = countCharacters(target); 
 
+    int shift = countCharacters(to)-targetLength;
+
+
+    
+    str = newStr;
 }
 
+
+//tested
 void encryptText(char str[], int shift)
 {   
-    shift %= 26;
-    if(shift<0){
-        shift +=26; // revert shift dir
+    while(shift<0){
+        shift+=26;
     }
+    shift %=26; 
 
-    int i =0;
-    while(str[i]!='\0'){
-           if(('a' <= str[i] && str[i] <= 'z' )||('A' <= str[i] && str[i] <= 'Z' ) ){
-                str[i]+=shift;
-                if(str[i]>'z'){
-                    str[i]-='a';
+    for(int i=0;i<countCharacters(str);i++){
+        char& c = str[i];
+        if('a' <= c && c <= 'z'){
+            for(int j=0;j<shift;j++){
+                c++;
+                if(c>'z'){
+                    c='a';
                 }
-           }
-           i++;
+            }
+        }
+
+       if('A' <= c && c <= 'Z'){
+            for(int j=0;j<shift;j++){
+                c++;
+                if(c>'Z'){
+                    c='A';
+                }
+            }
+        }
+      
     }
-
-
-    for(int i =0;str[i]!='\0';i++){
-        cout<< str[i];
-    }
-
-    
-    
-    
 }
 
+
+//fix
 int countNumOccurences(const char str[], const char target[])
 {
-    return -1; // Replace this line with your implementation
+    int count =0;
+    int targetLength = countCharacters(target);
+
+    int currentIdx = checkExist(str,target); //first index
+        if(currentIdx>=0){
+            count++;
+        }else{
+            return 0;
+        }
+
+    int newIdx=checkExist(str+currentIdx+targetLength,target);
+
+    while(newIdx!=-1){ 
+        count++;
+        cout <<"bug";
+        newIdx = checkExist(str+currentIdx+targetLength,target);
+    }
+
+    return count; // Replace this line with your implementation
 }
 
 void convertIntoLines(const char str[], char lines[MAX_LINES][NUM_CHARS_PER_LINE])
@@ -177,6 +229,7 @@ void printMainDisplay(const char str[])
 
 int main()
 {
+
     int choice = 0;
     char str[MAX_STRLEN];
 
@@ -244,4 +297,6 @@ int main()
     {
         printPigLatin(str);
     }
+
+
 }
