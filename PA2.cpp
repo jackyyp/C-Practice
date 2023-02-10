@@ -66,7 +66,6 @@ int countCharacters(const char str[])
     }
 
     return length; 
-    
 }
 
 //tested
@@ -100,13 +99,9 @@ void swapString(char str[], const char target[], const char to[])
     int targetLength = countCharacters(target); 
 
     int shift = countCharacters(to)-targetLength;
-
-
-    
     str = newStr;
+
 }
-
-
 //tested
 void encryptText(char str[], int shift)
 {   
@@ -143,34 +138,92 @@ void encryptText(char str[], int shift)
 int countNumOccurences(const char str[], const char target[])
 {
     int count =0;
-    int targetLength = countCharacters(target);
+    int targetLength = countCharacters(target); //"test"
 
-    int currentIdx = checkExist(str,target); //first index
-        if(currentIdx>=0){
-            count++;
-        }else{
-            return 0;
-        }
-
-    int newIdx=checkExist(str+currentIdx+targetLength,target);
-
-    while(newIdx!=-1){ 
-        count++;
-        cout <<"bug";
-        newIdx = checkExist(str+currentIdx+targetLength,target);
+    int start = checkExist(str,target); //first index
+    if(start<0){
+        return 0;
     }
 
-    return count; // Replace this line with your implementation
+
+    for(int i =start;i<countCharacters(str);){ //skip found letter
+        if(checkExist(str+i,target)<0){
+            break;
+        }else{
+            i=checkExist(str+i,target);
+            count++;
+        }
+    }
+
+    return count;
 }
 
 void convertIntoLines(const char str[], char lines[MAX_LINES][NUM_CHARS_PER_LINE])
 {
-    cout << "Not Implemented" << endl; // Replace this line with your implementation
+    int* wordlength = new int[countWords(str)];
+
+    int count =0;
+    int word =0;
+
+    for(int i=0;i<countCharacters(str)+1;i++){
+        if(str[i]==' '||str[i]=='\0'){
+            wordlength[word] = count;
+
+            cout<<count<< " " ;
+            count = 0;
+
+            word++;
+            continue;
+        }
+        count++;
+    }  
+    //we now have int array of word length (sep by spaces)
+
+
+    //change array to 
+    int count_index=0;
+    int line=0;
+
+    int * cut_index = new int[countWords(str)];
+    for(int i=0;i<countCharacters(str)+1;i++){
+        int currentlengthcount =0;
+
+        for(int j=0;j<countWords(str)-1;j++){//j+1 is for space , +1 is for '\0'
+            if(wordlength[j]+wordlength[j+1]+j+1+1<=NUM_CHARS_PER_LINE){
+                currentlengthcount=wordlength[j]+wordlength[j+1]+j+1+1;
+            }else{
+                cut_index[count_index] = currentlengthcount;
+                cout<<currentlengthcount;
+                count_index++;
+            }
+        }
+
+        for(int j=0;j<currentlengthcount;j++){//j+1 is for space , +1 is for '\0'
+            if(j==currentlengthcount-1){
+                lines[line][j] ='\0';
+            }
+            else{
+                lines[line][j] = str[i];
+            }
+        }
+        line++;
+    }
+
+    
+    delete[] wordlength;
 }
 
 void printLeftJustified(const char str[])
-{
-    cout << "Not Implemented" << endl; // Replace this line with your implementation
+{   
+    char lines[MAX_LINES][NUM_CHARS_PER_LINE];
+
+    convertIntoLines(str,lines);
+    for(int i=0;i<MAX_LINES;i++){
+        cout<<lines[i];
+    }
+
+    
+    
 }
 
 void printRightJustified(const char str[])
@@ -229,6 +282,10 @@ void printMainDisplay(const char str[])
 
 int main()
 {
+
+    char lines[MAX_LINES][NUM_CHARS_PER_LINE];
+    char test [MAX_STRLEN]="Why have a ballroom with no balls.";
+    convertIntoLines(test,lines);
 
     int choice = 0;
     char str[MAX_STRLEN];
