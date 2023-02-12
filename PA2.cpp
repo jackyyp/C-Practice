@@ -5,7 +5,7 @@
 using namespace std;
 
 const int MAX_STRLEN = 1000;
-const int NUM_CHARS_PER_LINE = 50;
+const int NUM_CHARS_PER_LINE = 10; // mutated
 const int MAX_LINES = 15;
 
 int countCharacters(const char str[]);
@@ -53,6 +53,19 @@ int checkExist(const char str[],const char target[]){
     return -1; //not found
 }
 
+bool checkVowel(const char letter){
+
+    char vowel[] = {'a','e','i','o','u'};
+
+    for(int i =0;i<5;i++){
+        if(letter==vowel[i]){
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -93,13 +106,36 @@ void swapString(char str[], const char target[], const char to[])
     //Description - Replaces every instance of the characters in target in str with the characters in to.
     char newStr[MAX_STRLEN];
 
-    int idx = checkExist(str,target);
-
+    int targetLength = countCharacters(target);
     int strLength = countCharacters(str);
-    int targetLength = countCharacters(target); 
+    int toLength = countCharacters(to);
+    
+    int strBegin = checkExist(str,target); // " .. testing_" we get start = 0, end = 7 (the empty space)
+    int strEnd = strBegin+targetLength;
+    
+    
 
-    int shift = countCharacters(to)-targetLength;
-    str = newStr;
+    do
+    {
+    int k = 0;
+    for(int i=0;i<strBegin;i++){
+        newStr[k] = str[i];
+        k++; 
+    }
+    for(int i=0;i<toLength;i++){
+        newStr[k] = to[i];
+        k++;
+    }
+    for(int i=0;i<strLength-strEnd;i++){
+        newStr[k]=str[strEnd+i];
+        k++;
+    }
+    
+    newStr[k]='\0';
+    }
+    while(false);
+
+    cout<<newStr<<endl;
 
 }
 //tested
@@ -134,23 +170,22 @@ void encryptText(char str[], int shift)
 }
 
 
-//fix
+//fixed
 int countNumOccurences(const char str[], const char target[])
 {
     int count =0;
     int targetLength = countCharacters(target); //"test"
+    int strLength = countCharacters(str);
 
-    int start = checkExist(str,target); //first index
-    if(start<0){
-        return 0;
-    }
+    for (int i =0;i<strLength-targetLength;i++){ //slide one by one
+        int j=0; 
+        for(;j<targetLength;j++){
+            if(str[i+j]!=target[j]){
+                break;
+            }
+        }
 
-
-    for(int i =start;i<countCharacters(str);){ //skip found letter
-        if(checkExist(str+i,target)<0){
-            break;
-        }else{
-            i=checkExist(str+i,target);
+        if(j==targetLength){
             count++;
         }
     }
@@ -169,7 +204,6 @@ void convertIntoLines(const char str[], char lines[MAX_LINES][NUM_CHARS_PER_LINE
         if(str[i]==' '||str[i]=='\0'){
             wordlength[word] = count;
 
-            cout<<count<< " " ;
             count = 0;
 
             word++;
@@ -177,49 +211,116 @@ void convertIntoLines(const char str[], char lines[MAX_LINES][NUM_CHARS_PER_LINE
         }
         count++;
     }  
+
     //we now have int array of word length (sep by spaces)
+    
+    int linelength[MAX_LINES];
 
+    int idx = 0;
+    int acc=0;
+    int linecount=0;
 
-    //change array to 
-    int count_index=0;
-    int line=0;
+    cout<<endl;
 
-    int * cut_index = new int[countWords(str)];
-    for(int i=0;i<countCharacters(str)+1;i++){
-        int currentlengthcount =0;
+    while(idx < countWords(str)){
+        if(acc+wordlength[idx] <= NUM_CHARS_PER_LINE-1){
+            acc+=wordlength[idx];
+            acc++; //space 
 
-        for(int j=0;j<countWords(str)-1;j++){//j+1 is for space , +1 is for '\0'
-            if(wordlength[j]+wordlength[j+1]+j+1+1<=NUM_CHARS_PER_LINE){
-                currentlengthcount=wordlength[j]+wordlength[j+1]+j+1+1;
-            }else{
-                cut_index[count_index] = currentlengthcount;
-                cout<<currentlengthcount;
-                count_index++;
+            if(idx == countWords(str)-1){ //last word
+                linelength[linecount]=acc;
+              
+                linecount++;
+                break;
             }
+           
+            idx++; //next word          
+
+
+        }else{ //exceed
+            linelength[linecount]=acc;
+           
+            linecount++;
+            acc=0;
         }
-
-        for(int j=0;j<currentlengthcount;j++){//j+1 is for space , +1 is for '\0'
-            if(j==currentlengthcount-1){
-                lines[line][j] ='\0';
-            }
-            else{
-                lines[line][j] = str[i];
-            }
-        }
-        line++;
     }
 
-    
+    //now we have a list of length for each line
+
+    int k=0; //itr for str    
+    for(int line=0;line<linecount;line++){
+        for(int i=0;i<linelength[line]-1;i++){
+            if(str[k]==' '&&i==0){
+                k++;
+            }
+            lines[line][i]=str[k];
+            k++;
+        }
+        lines[line][linelength[line]-1]='\0';
+    }
+
     delete[] wordlength;
+
 }
 
 void printLeftJustified(const char str[])
 {   
     char lines[MAX_LINES][NUM_CHARS_PER_LINE];
-
     convertIntoLines(str,lines);
-    for(int i=0;i<MAX_LINES;i++){
-        cout<<lines[i];
+
+    int* wordlength = new int[countWords(str)];
+    int count =0;
+    int word =0;
+
+    for(int i=0;i<countCharacters(str)+1;i++){
+        if(str[i]==' '||str[i]=='\0'){
+            wordlength[word] = count;
+
+            count = 0;
+
+            word++;
+            continue;
+        }
+        count++;
+    }  
+
+    //we now have int array of word length (sep by spaces)
+    
+    int linelength[MAX_LINES];
+
+    int idx = 0;
+    int acc=0;
+    int linecount=0;
+
+    cout<<endl;
+
+    while(idx < countWords(str)){
+        if(acc+wordlength[idx] <= NUM_CHARS_PER_LINE-1){
+            acc+=wordlength[idx];
+            acc++; //space 
+
+            if(idx == countWords(str)-1){ //last word
+                linelength[linecount]=acc;
+              
+                linecount++;
+                break;
+            }
+           
+            idx++; //next word          
+
+
+        }else{ //exceed
+            linelength[linecount]=acc;
+           
+            linecount++;
+            acc=0;
+        }
+    }
+
+    //now we have a list of length for each line
+
+    for(int i=0;i<linecount;i++){
+        cout<<lines[i]<<endl;
     }
 
     
@@ -228,7 +329,66 @@ void printLeftJustified(const char str[])
 
 void printRightJustified(const char str[])
 {
-    cout << "Not Implemented" << endl; // Replace this line with your implementation
+    char lines[MAX_LINES][NUM_CHARS_PER_LINE];
+    convertIntoLines(str,lines);
+
+    int* wordlength = new int[countWords(str)];
+    int count =0;
+    int word =0;
+
+    for(int i=0;i<countCharacters(str)+1;i++){
+        if(str[i]==' '||str[i]=='\0'){
+            wordlength[word] = count;
+
+            count = 0;
+
+            word++;
+            continue;
+        }
+        count++;
+    }  
+
+    //we now have int array of word length (sep by spaces)
+    
+    int linelength[MAX_LINES];
+
+    int idx = 0;
+    int acc=0;
+    int linecount=0;
+
+    cout<<endl;
+
+    while(idx < countWords(str)){
+        if(acc+wordlength[idx] <= NUM_CHARS_PER_LINE-1){
+            acc+=wordlength[idx];
+            acc++; //space 
+
+            if(idx == countWords(str)-1){ //last word
+                linelength[linecount]=acc;
+              
+                linecount++;
+                break;
+            }
+           
+            idx++; //next word          
+
+
+        }else{ //exceed
+            linelength[linecount]=acc;
+           
+            linecount++;
+            acc=0;
+        }
+    }
+
+    //now we have a list of length for each line
+
+    for(int i =0;i<linecount;i++){
+        for(int j=0;j<NUM_CHARS_PER_LINE-linelength[i];j++){
+            cout<<" ";
+        }
+        cout<<lines[i]<<endl;
+    }
 }
 
 void printJustified(const char str[])
@@ -238,7 +398,78 @@ void printJustified(const char str[])
 
 void convertStrToPigLatin(char str[])
 {
-    cout << "Not Implemented" << endl; // Replace this line with your implementation
+    //create a 2d array of words
+    char** word = new char* [countWords(str)];
+    for(int i=0;i<countWords(str);i++){
+        word[i] = new char[MAX_STRLEN]; 
+    }
+
+    int strLen = countCharacters(str);
+
+    int wordStartIdx = 0;
+    for(int k=0;k<countWords(str);k++){
+        for(int i=wordStartIdx;i<=strLen;i++){
+            if(str[i]==' '||str[i]=='\0'){
+                wordStartIdx = i+1;
+                word[k][i] = '\0';
+                break;
+            }
+            word[k][i] = str[i];
+        }   
+    }
+
+    for(int i=0;i<countWords(str);i++){
+        cout<< word[i]<<endl;
+    }    
+
+
+    cout<<endl;
+
+
+   //maniputlate the array
+    for(int i=0;i<countWords(str);i++){
+        int endIdx = 0;
+
+        for(int j=0;j<MAX_STRLEN;j++){
+            if(word[i][j] =='\0'){
+                break;
+            }
+            endIdx++;
+        }
+
+        //already vowel
+        if(checkVowel(word[i][0])){
+            word[i][endIdx] = 'y';
+            word[i][endIdx+1] = 'a';
+            word[i][endIdx+2] = 'y';
+            word[i][endIdx+3] = '\0';
+            continue;
+        }
+
+        //not already vowel , shift
+        while(!checkVowel(word[i][0])){
+            word[i][endIdx] = word[i][0];
+            word[i][endIdx+1] = '\0';
+
+            //left shift
+            for(int j=0;j<endIdx+1;j++){
+                word[i][j] = word[i][j+1];
+            }
+        }
+
+        word[i][endIdx] = 'a';
+        word[i][endIdx+1] = 'y';
+        word[i][endIdx+2] = '\0';
+        
+   }
+   
+    //print the word
+   for(int i=0;i<countWords(str);i++){
+     cout<< word[i] <<endl;
+   }
+
+
+
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -285,10 +516,11 @@ int main()
 
     char lines[MAX_LINES][NUM_CHARS_PER_LINE];
     char test [MAX_STRLEN]="Why have a ballroom with no balls.";
-    convertIntoLines(test,lines);
+    convertStrToPigLatin(test);
 
     int choice = 0;
     char str[MAX_STRLEN];
+
 
     cout << "Enter text: ";
     cin.getline(str, MAX_STRLEN, '\n');
