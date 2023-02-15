@@ -5,7 +5,7 @@
 using namespace std;
 
 const int MAX_STRLEN = 1000;
-const int NUM_CHARS_PER_LINE = 10; // mutated
+const int NUM_CHARS_PER_LINE = 50; // mutated
 const int MAX_LINES = 15;
 
 int countCharacters(const char str[]);
@@ -31,6 +31,99 @@ void printPigLatin(const char str[]);
 //helper function
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+bool checkComma(char str[]){
+     int i = countCharacters(str)-1;
+
+    if(str[i]==',' || str[i]=='.'){
+        return true;
+    }
+
+    return false;
+    
+}
+
+//char ptr to array
+void strConcat(char str[],  char** word ,const int WordCount){
+
+    int k=0;
+    for(int i=0;i<WordCount;i++){
+        for(int j=0;j<MAX_STRLEN;j++){
+            if(word[i][j]=='\0'){ //check if end
+                str[k] = ' ';
+                k++;
+                break;
+            }
+            str[k] = word[i][j];
+            k++;
+        }
+    }
+    str[k-1] = '\0';
+
+  
+}
+
+bool strEqual(const char str1[],const char str2[]){
+    int len1=countCharacters(str1) ,len2 =countCharacters(str2) ;
+
+    if(len1!=len2){
+        return false;
+    }
+
+    for(int i=0; i<len1;i++){
+        if(str1[i]!=str2[i]){
+            return false;
+        }
+    }
+    return true;
+
+}
+
+bool strPartialEqual(const char word[],const char substr[]){
+    int substrLen= countCharacters(substr);
+
+    for (int i =0;i<substrLen;i++){
+        if(word[i]!=substr[i]){
+            return false;
+        }
+    }
+    return true;
+}
+
+void memoryClean(char** word,int wordcount){
+    for(int i=0;i<wordcount;i++){
+        delete[] word[i];
+   }
+   delete [] word;
+}
+
+char** convertWord(const char str[]){
+     char** word = new char* [countWords(str)];
+    for(int i=0;i<countWords(str);i++){
+        word[i] = new char[MAX_STRLEN]; 
+    }
+
+    int strLen = countCharacters(str);
+
+    //load in 
+    int k =0;
+    int i = 0;
+    int j =0;
+    for(int k=0;k<strLen;k++){
+        if(str[k]==' ' || str[k]=='\0'){
+            word[i][j] = '\0'; //append null to every word
+            i++;
+            j=0;
+        }else{
+            word[i][j] = str[k];
+            j++;
+        }
+    }
+
+
+    return word;
+}
+
+
 //return index of first char of targeted char
 int checkExist(const char str[],const char target[]){
     for(int i =0;i<countCharacters(str);i++){
@@ -55,9 +148,8 @@ int checkExist(const char str[],const char target[]){
 
 bool checkVowel(const char letter){
 
-    char vowel[] = {'a','e','i','o','u'};
-
-    for(int i =0;i<5;i++){
+    char vowel[] = {'a','e','i','o','u','A','E','I','O','U'};
+    for(int i =0;i<10;i++){
         if(letter==vowel[i]){
             return true;
         }
@@ -99,44 +191,44 @@ int countWords(const char str[])
     //* how about empty string ' ' ? --> *FIX (not returning 1)
 }
 
-//to be done
+//to be done , need to fix for global
 void swapString(char str[], const char target[], const char to[])
 {
 
     //Description - Replaces every instance of the characters in target in str with the characters in to.
-    char newStr[MAX_STRLEN];
 
-    int targetLength = countCharacters(target);
-    int strLength = countCharacters(str);
-    int toLength = countCharacters(to);
-    
-    int strBegin = checkExist(str,target); // " .. testing_" we get start = 0, end = 7 (the empty space)
-    int strEnd = strBegin+targetLength;
-    
-    
+    //recall target is a word, to also (may have space in end)
+    char ** word = convertWord(str);
+    int wordCount = countWords(str);
+    int toLen = countCharacters(to);
+    int targetLen = countCharacters(target);
 
-    do
-    {
-    int k = 0;
-    for(int i=0;i<strBegin;i++){
-        newStr[k] = str[i];
-        k++; 
-    }
-    for(int i=0;i<toLength;i++){
-        newStr[k] = to[i];
-        k++;
-    }
-    for(int i=0;i<strLength-strEnd;i++){
-        newStr[k]=str[strEnd+i];
-        k++;
-    }
-    
-    newStr[k]='\0';
-    }
-    while(false);
+    //change word (partial) 
+    for(int i=0;i<wordCount;i++){
 
-    cout<<newStr<<endl;
+        //complete change
+        if(strEqual(word[i],target)){
+            for(int j=0;j<toLen;j++){
+                word[i][j] = to[j];
+            }
+            word[i][toLen] = '\0';
+        }
 
+        //partial change
+        else if(strPartialEqual(word[i],target)){ // if found
+            for(int j =0;j<toLen;j++){
+                word[i][j] = to[j]; 
+            }
+            int diff = targetLen-toLen;
+            for(int j=toLen;j<countCharacters(word[i])-diff+1;j++){
+                word[i][j] = word[i][j+diff];
+            }
+        }
+    }
+
+
+    strConcat(str,word,wordCount);
+    memoryClean(word,wordCount);
 }
 //tested
 void encryptText(char str[], int shift)
@@ -396,58 +488,55 @@ void printJustified(const char str[])
     cout << "Not Implemented" << endl; // Replace this line with your implementation
 }
 
-void convertStrToPigLatin(char str[])
-{
+
+//bug need to check ( . , - ) and exclude from function.
+void convertStrToPigLatin(char str[]){
+
+
+
+    int strLen = countWords(str);
+
     //create a 2d array of words
-    char** word = new char* [countWords(str)];
-    for(int i=0;i<countWords(str);i++){
-        word[i] = new char[MAX_STRLEN]; 
-    }
-
-    int strLen = countCharacters(str);
-
-    int wordStartIdx = 0;
-    for(int k=0;k<countWords(str);k++){
-        for(int i=wordStartIdx;i<=strLen;i++){
-            if(str[i]==' '||str[i]=='\0'){
-                wordStartIdx = i+1;
-                word[k][i] = '\0';
-                break;
-            }
-            word[k][i] = str[i];
-        }   
-    }
-
-    for(int i=0;i<countWords(str);i++){
-        cout<< word[i]<<endl;
-    }    
-
-
-    cout<<endl;
-
+    char ** word = convertWord(str);
+    int WordCount = countWords(str);
 
    //maniputlate the array
-    for(int i=0;i<countWords(str);i++){
+    for(int i=0;i<WordCount;i++){
         int endIdx = 0;
 
+        char store;
+        //found idx null char
         for(int j=0;j<MAX_STRLEN;j++){
             if(word[i][j] =='\0'){
                 break;
             }
+            if(word[i][j] =='.' || word[i][j] ==',' ){
+                store = word[i][j];
+                endIdx++;
+                break;
+            }
+
             endIdx++;
         }
-
         //already vowel
         if(checkVowel(word[i][0])){
             word[i][endIdx] = 'y';
             word[i][endIdx+1] = 'a';
             word[i][endIdx+2] = 'y';
-            word[i][endIdx+3] = '\0';
+
+            if(checkComma(word[i])){     
+                word[i][endIdx+3] = store;
+                word[i][endIdx+4] = '\0';
+            } else{
+                word[i][endIdx+3] = '\0';
+
+            }
             continue;
         }
 
-        //not already vowel , shift
-        while(!checkVowel(word[i][0])){
+        //not already vowel , shif
+
+        while(true){
             word[i][endIdx] = word[i][0];
             word[i][endIdx+1] = '\0';
 
@@ -455,6 +544,10 @@ void convertStrToPigLatin(char str[])
             for(int j=0;j<endIdx+1;j++){
                 word[i][j] = word[i][j+1];
             }
+
+            if(checkVowel(word[i][0])){
+                break;
+            } //check again
         }
 
         word[i][endIdx] = 'a';
@@ -463,13 +556,17 @@ void convertStrToPigLatin(char str[])
         
    }
    
+    //@debug 
     //print the word
-   for(int i=0;i<countWords(str);i++){
-     cout<< word[i] <<endl;
-   }
+//    for(int i=0;i<countWords(str);i++){
+//         cout<< word[i] <<endl;
+//    }
 
+   //concatenate 
+    strConcat(str,word,WordCount);
 
-
+    //clean up memory
+    memoryClean(word,WordCount);
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -513,14 +610,11 @@ void printMainDisplay(const char str[])
 
 int main()
 {
-
-    char lines[MAX_LINES][NUM_CHARS_PER_LINE];
-    char test [MAX_STRLEN]="Why have a ballroom with no balls.";
+    char test[MAX_STRLEN] = "consume cheap warm-up";
     convertStrToPigLatin(test);
 
     int choice = 0;
     char str[MAX_STRLEN];
-
 
     cout << "Enter text: ";
     cin.getline(str, MAX_STRLEN, '\n');
